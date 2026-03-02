@@ -1,10 +1,15 @@
-# Create Database
+-- =====================================================
+-- Retail Sales Analytics - Snowflake Setup Script
+-- Author: Hemavalli Mannemuddu
+-- =====================================================
+
+-- Create Database
 CREATE DATABASE IF NOT EXISTS PBI_DB;
 
-# Create Schema
+-- Create Schema
 CREATE SCHEMA IF NOT EXISTS PBI_DB.SALES_SCHEMA;
 
-# create Tables
+-- Create Table
 CREATE OR REPLACE TABLE PBI_DB.SALES_SCHEMA.SALES_DATA (
     SALES_DATE DATE,
     PRODUCT STRING,
@@ -16,34 +21,25 @@ CREATE OR REPLACE TABLE PBI_DB.SALES_SCHEMA.SALES_DATA (
     CUSTOMER STRING
 );
 
-# Create file format
+-- Create File Format
 CREATE OR REPLACE FILE FORMAT PBI_DB.SALES_SCHEMA.CSV_FORMAT
 TYPE = 'CSV'
 SKIP_HEADER = 1
 FIELD_OPTIONALLY_ENCLOSED_BY = '"'
 DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS';
 
-# Create Stage (Storage location)
+-- Create Stage
 CREATE OR REPLACE STAGE PBI_DB.SALES_SCHEMA.PBI_STAGE
 FILE_FORMAT = CSV_FORMAT;
 
-# Upload CSV file
-Option 1: Snowflake UI
-Open PBI_STAGE
-Upload PowerBI_Practice_Dataset.csv
-
-Option 2: SQL (if using SnowSQL)
-PUT file://PowerBI_Practice_Dataset.csv @PBI_DB.SALES_SCHEMA.PBI_STAGE;
-
-# Load Data into Table
+-- Load Data
 COPY INTO PBI_DB.SALES_SCHEMA.SALES_DATA
 FROM @PBI_DB.SALES_SCHEMA.PBI_STAGE;
 
-# Validate Load
+-- Validate Load
 SELECT COUNT(*) FROM PBI_DB.SALES_SCHEMA.SALES_DATA;
-SELECT * FROM PBI_DB.SALES_SCHEMA.SALES_DATA LIMIT 10;
 
-# Create Business logic
+-- Create Business View
 CREATE OR REPLACE VIEW PBI_DB.SALES_SCHEMA.VW_SALES_ANALYTICS AS
 SELECT
     SALES_DATE,
@@ -55,5 +51,10 @@ SELECT
     SALES,
     COST,
     SALES - COST AS PROFIT,
-    ROUND((SALES - COST) / SALES * 100, 2) AS PROFIT_MARGIN
+    ROUND(
+        CASE 
+            WHEN SALES = 0 THEN 0
+            ELSE ((SALES - COST) / SALES) * 100
+        END, 
+    2) AS PROFIT_MARGIN
 FROM PBI_DB.SALES_SCHEMA.SALES_DATA;
