@@ -1,4 +1,4 @@
-# DAX Measures Used in Project
+## DAX Measures Used in Project
 
 ## Total Sales
 Total Sales = SUM(Sales[Sales])
